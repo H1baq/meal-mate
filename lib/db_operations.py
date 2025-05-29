@@ -154,3 +154,53 @@ def create_meal_plan(date_str, recipe_dict):
             session.rollback()
             print(f"Failed to create meal plan: {e}")
             return False
+        
+        
+def update_ingredient_quantity (name:str, new_quantity:float) -> bool:
+    with Session() as session:
+        ingredient = session.query(Ingredient).filter_by(name=name).first()
+        if not ingredient:
+            print(f"Ingredient '{name}' not found.") 
+            return False
+        inventory = session.query(Inventory).filter_by(ingredient_id=ingredient.id).first()
+        if not inventory:
+            print(f"No inventory record found for ingredient '{name}'.")
+            return False
+
+        inventory.quantity_in_stock=new_quantity
+        session.commit()
+        print(f"Updated '{name}' quantity to {new_quantity}.")
+        return True
+def delete_ingredient(name: str) -> bool:
+    with Session() as session:
+        ingredient = session.query(Ingredient).filter_by(name=name).first()
+        if not ingredient:
+            print(f"Ingredient '{name}' not found.")
+            return False
+
+        # Also delete related inventory and recipe ingredients (cascade optional)
+        session.query(Inventory).filter_by(ingredient_id=ingredient.id).delete()
+        session.query(RecipeIngredient).filter_by(ingredient_id=ingredient.id).delete()
+        session.delete(ingredient)
+        session.commit()
+        print(f"Ingredient '{name}' and related data deleted.")
+        return True
+
+
+def delete_recipe(recipe_name: str) -> bool:
+    with Session() as session:
+        recipe = session.query(Recipe).filter_by(name=recipe_name).first()
+        if not recipe:
+            print(f"Recipe '{recipe_name}' not found.")
+            return False
+
+        # Delete recipe ingredients first
+        session.query(RecipeIngredient).filter_by(recipe_id=recipe.id).delete()
+        # Delete meal plans linked to this recipe
+        session.query(MealPlan).filter_by(recipe_id=recipe.id).delete()
+        session.delete(recipe)
+        session.commit()
+        print(f"Recipe '{recipe_name}' and related data deleted.")
+        return True
+    
+      

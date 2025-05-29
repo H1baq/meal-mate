@@ -1,5 +1,16 @@
-from helpers import get_user_input, validate_positive_number, format_table, parse_date
+from helpers import get_user_input, validate_positive_number, format_table, parse_date,confirm_action
 from db_operations import list_recipes, check_inventory, create_meal_plan, save_ingredient, save_recipe_with_ingredients, load_inventory
+from db_operations import (
+    list_recipes,
+    check_inventory,
+    save_ingredient,
+    create_meal_plan,
+    save_recipe_with_ingredients,
+    update_ingredient_quantity,
+    delete_ingredient,
+    delete_recipe
+)
+
 
 
 def main():
@@ -10,7 +21,10 @@ def main():
         print("2. Plan a Meal")
         print("3. View Inventory")
         print("4. Add Recipe")
-        print("5. Exit")
+        print("5. Update Ingredient Quantity")
+        print("6. Delete Ingredient")
+        print("7. Delete Recipe")
+        print("8. Exit")
         choice = input("Enter choice: ").strip()
 
         if choice == '1':
@@ -22,10 +36,17 @@ def main():
         elif choice == '4':
             add_recipe()
         elif choice == '5':
+            update_ingredient_quantity_cli()
+        elif choice == '6':
+            delete_ingredient_cli()  
+        elif choice == '7':
+            delete_recipe_cli()
+        elif choice == '8':
             print("Goodbye!")
             break
         else:
             print("Invalid choice, try again.")
+
 
 def add_ingredient():
     name = get_user_input("Enter ingredient name: ")
@@ -60,24 +81,42 @@ def plan_meal():
     for idx, recipe in enumerate(recipes, 1):
         print(f"{idx}. {recipe['name']}")
 
-    choice = get_user_input("Select recipe number: ")
+    print("Select recipe numbers separated by commas (e.g. 1,3,5):")
+    choices = get_user_input("Your choices: ")
 
-    if not choice.isdigit() or not (1 <= int(choice) <= len(recipes)):
-        print("Invalid recipe choice.")
+    try:
+        selected_indexes = [int(x.strip()) - 1 for x in choices.split(",")]
+    except ValueError:
+        print("Invalid input. Please enter numbers separated by commas.")
         return
 
-    selected_recipe = recipes[int(choice) - 1]
-    missing = check_inventory(selected_recipe)
+    selected_recipes = []
+    for i in selected_indexes:
+        if 0 <= i < len(recipes):
+            selected_recipes.append(recipes[i])
+        else:
+            print(f"Recipe number {i+1} is invalid.")
+            return
 
-    if missing:
-        print("You are missing the following ingredients for this recipe:")
-        for ing in missing:
+    # Aggregate missing ingredients across all recipes
+    all_missing = []
+    for recipe in selected_recipes:
+        missing = check_inventory(recipe)
+        if missing:
+            all_missing.extend(missing)
+
+    if all_missing:
+        print("You are missing the following ingredients:")
+        for ing in all_missing:
             print(f"- {ing['name']} (need {ing['needed']}, have {ing['have']})")
     else:
-        print("You have all ingredients needed for this recipe.")
+        print("You have all ingredients needed for the selected recipes.")
 
-    create_meal_plan(meal_date_str, selected_recipe)
-    print(f"Meal plan for {meal_date_str} with recipe '{selected_recipe['name']}' saved.")
+    for recipe in selected_recipes:
+        create_meal_plan(meal_date_str, recipe)
+
+    print(f"Meal plan for {meal_date_str} with {len(selected_recipes)} recipes saved.")
+
 
 def view_inventory():
     inventory = load_inventory()
@@ -114,6 +153,39 @@ def add_recipe():
         print(f"Recipe '{name}' added with {len(ingredients)} ingredients.")
     else:
         print("Failed to add recipe.")
+        
+def update_ingredient_quantity_cli():
+    name = get_user_input("Enter ingredient name to update: ")
+    quantity_input = get_user_input("Enter new quantity: ")
+    qty = validate_positive_number(quantity_input)
 
+    while qty is None:
+        print("Please enter a valid positive number.")
+        quantity_input = get_user_input("Enter new quantity: ")
+        qty = validate_positive_number(quantity_input)
+
+    success = update_ingredient_quantity(name, qty)
+    if success:
+        print(f"Ingredient '{name}' quantity updated to {qty}.")
+
+
+def delete_ingredient_cli():
+    name = get_user_input("Enter ingredient name to delete: ")
+    if confirm_action(f"Are you sure you want to delete ingredient '{name}'? This action cannot be undone (y/n): "):
+        success = delete_ingredient(name)
+        if success:
+            print(f"Ingredient '{name}' deleted.")
+    else:
+        print("Deletion cancelled.")
+
+
+def delete_recipe_cli():
+    name = get_user_input("Enter recipe name to delete: ")
+    if confirm_action(f"Are you sure you want to delete recipe '{name}'? This action cannot be undone (y/n): "):
+        success = delete_recipe(name)
+        if success:
+            print(f"Recipe '{name}' deleted.")
+    else:
+        print("Deletion cancelled.")
 if __name__ == "__main__":
     main()
