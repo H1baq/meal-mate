@@ -82,3 +82,33 @@ You can install dependencies with:
 
 ```bash
 pip install -r requirements.txt
+
+Typical User Workflow
+Set up the database by running Alembic migrations:
+
+bash
+Copy code
+alembic upgrade head
+Seed initial data (ingredients, recipes, inventory) by running the seed script:
+
+bash
+Copy code
+python seed.py
+Use the CLI script to:
+
+View recipes and ingredients.
+
+Check inventory against recipes.
+
+Add new ingredients or update stock.
+
+Create meal plans by selecting recipes and dates.
+
+Additional Notes
+Inventory checks use optimized SQL queries with joins to avoid performance issues.
+
+Units are strictly validated (grams, ml, pcs) to maintain data consistency.
+
+Alembic is used for managing database schema versions; always run migrations before running the app after schema changes.
+
+

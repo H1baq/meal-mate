@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker, joinedload
 from sqlalchemy import create_engine
 from datetime import datetime
 
-engine = create_engine("sqlite:///db/meal_mate.db")
+engine = create_engine("sqlite:///lib/db/meal_mate.db")
 Session = sessionmaker(bind=engine)
 
 
