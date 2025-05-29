@@ -111,4 +111,13 @@ Units are strictly validated (grams, ml, pcs) to maintain data consistency.
 
 Alembic is used for managing database schema versions; always run migrations before running the app after schema changes.
 
+Author: 
+Hibaq Adan Kuresh
+
+Contact:
+for any inquries reach out via hibaqku7@gmail.com
+
+License under 
+MIT
+
 

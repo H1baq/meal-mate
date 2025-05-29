@@ -1,5 +1,6 @@
-from helpers import get_user_input, validate_positive_number, format_table
-from db_operations import load_inventory, save_ingredient, create_meal_plan, list_recipes, check_inventory, save_recipe_with_ingredients
+from helpers import get_user_input, validate_positive_number, format_table, parse_date
+from db_operations import list_recipes, check_inventory, create_meal_plan, save_ingredient, save_recipe_with_ingredients, load_inventory
+
 
 def main():
     print("Welcome to Meal Mate!")
@@ -41,7 +42,14 @@ def add_ingredient():
     print(f"Ingredient '{name}' with quantity {qty} {unit} added to inventory.")
 
 def plan_meal():
-    meal_date = get_user_input("Enter meal date (YYYY-MM-DD): ")
+    while True:
+        meal_date_str = get_user_input("Enter meal date (YYYY-MM-DD): ")
+        meal_date = parse_date(meal_date_str)
+        if meal_date is None:
+            print("Invalid date format. Please enter date as YYYY-MM-DD.")
+        else:
+            break
+
     recipes = list_recipes()
 
     if not recipes:
@@ -68,8 +76,8 @@ def plan_meal():
     else:
         print("You have all ingredients needed for this recipe.")
 
-    create_meal_plan(meal_date, selected_recipe)
-    print(f"Meal plan for {meal_date} with recipe '{selected_recipe['name']}' saved.")
+    create_meal_plan(meal_date_str, selected_recipe)
+    print(f"Meal plan for {meal_date_str} with recipe '{selected_recipe['name']}' saved.")
 
 def view_inventory():
     inventory = load_inventory()
